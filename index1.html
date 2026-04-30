@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>إدارة محل ملابس</title>
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+  <style>
+    * { box-sizing: border-box; font-family: Arial, Tahoma, sans-serif; }
+    body { margin: 0; background: #f3f4f6; color: #111827; padding-bottom: 75px; }
+    header { background: linear-gradient(135deg, #111827, #374151); color: white; padding: 20px 15px; text-align: center; border-bottom-left-radius: 22px; border-bottom-right-radius: 22px; }
+    header h1 { margin: 0; font-size: 24px; }
+    header p { margin: 8px 0 0; font-size: 14px; color: #e5e7eb; }
+    .container { width: 94%; max-width: 1100px; margin: 18px auto; }
+    .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px; }
+    .card { background: white; padding: 14px 8px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); text-align: center; }
+    .card h3 { margin: 0 0 7px; color: #4b5563; font-size: 13px; }
+    .card p { font-size: 18px; font-weight: bold; margin: 0; color: #111827; }
+    .section { display: none; background: white; padding: 16px; border-radius: 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 18px; }
+    .section.active { display: block; }
+    h2 { margin-top: 0; font-size: 20px; color: #111827; }
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+    label { font-weight: bold; margin-bottom: 5px; display: block; color: #374151; font-size: 14px; }
+    input, select { width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 12px; font-size: 15px; background: #fff; }
+    input:focus, select:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.15); }
+    button { border: none; padding: 11px 14px; border-radius: 12px; cursor: pointer; font-size: 14px; font-weight: bold; }
+    .btn-primary { background: #2563eb; color: white; width: 100%; margin-top: 22px; }
+    .btn-danger { background: #dc2626; color: white; }
+    .btn-success { background: #16a34a; color: white; }
+    .btn-warning { background: #f59e0b; color: white; }
+    .search-box { margin-bottom: 12px; }
+    .table-wrapper { overflow-x: auto; border-radius: 14px; border: 1px solid #e5e7eb; }
+    table { width: 100%; border-collapse: collapse; min-width: 900px; }
+    th, td { padding: 11px; border-bottom: 1px solid #e5e7eb; text-align: center; font-size: 14px; }
+    th { background: #111827; color: white; white-space: nowrap; }
+    tr.low-stock { background: #fff7ed; color: #9a3412; font-weight: bold; }
+    .invoice { background: #f9fafb; border: 1px dashed #9ca3af; border-radius: 16px; padding: 12px; margin-top: 12px; }
+    .invoice-row { display: grid; grid-template-columns: 1fr auto; gap: 10px; border-bottom: 1px solid #e5e7eb; padding: 8px 0; font-size: 14px; }
+    .invoice-row small { color: #6b7280; display: block; margin-top: 4px; }
+    .invoice-total { font-size: 18px; font-weight: bold; color: #111827; margin-top: 10px; text-align: center; }
+    .bottom-nav { position: fixed; bottom: 0; right: 0; left: 0; background: white; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 10px; box-shadow: 0 -4px 14px rgba(0,0,0,0.12); z-index: 1000; }
+    .bottom-nav button { background: #f3f4f6; color: #374151; border-radius: 14px; padding: 12px 5px; }
+    .bottom-nav button.active { background: #2563eb; color: white; }
+    .mobile-product-card, .mobile-report-card { display: none; }
+    .report-filter { display: grid; grid-template-columns: 1fr auto; gap: 10px; margin-bottom: 15px; align-items: end; }
+
+    @media (max-width: 700px) {
+      .cards { grid-template-columns: 1fr 1fr; }
+      .card:last-child { grid-column: span 2; }
+      .form-grid, .report-filter { grid-template-columns: 1fr; }
+      .btn-primary { margin-top: 5px; }
+      header h1 { font-size: 21px; }
+      .desktop-table { display: none; }
+      .mobile-product-card, .mobile-report-card { display: block; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 16px; padding: 12px; margin-bottom: 10px; }
+      .mobile-product-card strong, .mobile-report-card strong { font-size: 16px; }
+      .mobile-product-card p, .mobile-report-card p { margin: 6px 0; color: #374151; font-size: 14px; }
+      .mobile-actions { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 10px; }
+    }
+    .footer{
+    background:#111827;
+    color:white;
+    padding:25px 15px 90px;
+    text-align:center;
+    margin-top:30px;
+    border-top-left-radius:20px;
+    border-top-right-radius:20px;
+}
+
+.footer h3{
+    margin:0;
+    color:#60a5fa;
+}
+
+.footer p{
+    margin:8px 0;
+    color:#d1d5db;
+    font-size:14px;
+}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>StylePOS</h1>
+   <p>من المخزون إلى البيع… كل شيء بمكان واحد</p>
+  </header>
+
+  <div class="container">
+    <div class="cards">
+      <div class="card"><h3>أنواع المنتجات</h3><p id="totalItems">0</p></div>
+      <div class="card"><h3>كمية المخزون</h3><p id="totalQty">0</p></div>
+      <div class="card"><h3>ربح اليوم</h3><p id="todayProfit">0 د.ع</p></div>
+    </div>
+
+    <section id="stockSection" class="section active">
+      <h2>المخزون</h2>
+      <div class="form-grid">
+        <div><label>اسم المنتج</label><input type="text" id="name" placeholder="مثال: قميص" /></div>
+        <div><label>الصنف</label><select id="category"><option value="رجالي">رجالي</option><option value="نسائي">نسائي</option><option value="أطفال">أطفال</option><option value="أحذية">أحذية</option><option value="إكسسوارات">إكسسوارات</option></select></div>
+        <div><label>المقاس</label><select id="size"><option>S</option><option>M</option><option>L</option><option>XL</option><option>XXL</option><option>Free Size</option></select></div>
+        <div><label>اللون</label><input type="text" id="color" placeholder="مثال: أسود" /></div>
+        <div><label>سعر الشراء</label><input type="number" id="buyPrice" placeholder="مثال: 18000" /></div>
+        <div><label>سعر البيع</label><input type="number" id="sellPrice" placeholder="مثال: 25000" /></div>
+        <div><label>الكمية</label><input type="number" id="quantity" placeholder="مثال: 10" /></div>
+        <div><button class="btn-primary" onclick="addProduct()">إضافة للمخزون</button></div>
+      </div>
+      <br />
+      <input class="search-box" type="text" id="searchStock" placeholder="بحث في المخزون" oninput="displayStock()" />
+      <div class="desktop-table table-wrapper">
+        <table><thead><tr><th>#</th><th>المنتج</th><th>الصنف</th><th>المقاس</th><th>اللون</th><th>شراء</th><th>بيع</th><th>ربح القطعة</th><th>الكمية</th><th>الإجراءات</th></tr></thead><tbody id="stockTable"></tbody></table>
+      </div>
+      <div id="stockCards"></div>
+    </section>
+
+    <section id="salesSection" class="section">
+      <h2>البيع</h2>
+      <p style="color:#6b7280; margin-top:-5px;">اختر طريقة البيع: QR أو يدوي</p>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:15px;">
+        <button class="btn-success" onclick="showSaleMode('qr')">بيع QR</button>
+        <button class="btn-primary" onclick="showSaleMode('manual')">بيع يدوي</button>
+      </div>
+
+      <div id="qrSaleBox" class="invoice">
+        <h3>بيع عن طريق QR</h3>
+        <button class="btn-primary" style="padding:16px; font-size:18px; margin-bottom:8px;" onclick="startQRScanner()">فتح الكاميرا ومسح QR</button>
+        <button class="btn-danger" style="padding:12px; margin-bottom:8px;" onclick="stopQRScanner()">إيقاف الكاميرا</button>
+        <div id="qr-reader" style="width:100%; display:none; border-radius:16px; overflow:hidden;"></div>
+      </div>
+
+      <div id="manualSaleBox" class="invoice" style="display:none;">
+        <h3>بيع يدوي</h3>
+        <label>اختر المنتج</label>
+        <select id="manualProduct" onchange="selectManualProduct()"></select>
+      </div>
+
+      <div class="invoice" id="selectedProductBox" style="display:none;">
+        <h3>المنتج المحدد</h3>
+        <p><b>الاسم:</b> <span id="selectedName"></span></p>
+        <p><b>المقاس:</b> <span id="selectedSize"></span></p>
+        <p><b>اللون:</b> <span id="selectedColor"></span></p>
+        <p><b>سعر البيع:</b> <span id="selectedPrice"></span></p>
+        <p><b>المتوفر:</b> <span id="selectedQty"></span></p>
+      </div>
+
+      <div class="invoice">
+        <label>الكمية</label>
+        <input type="number" id="saleQty" value="1" min="1" style="font-size:22px; text-align:center; font-weight:bold;" />
+        <button class="btn-success" style="width:100%; padding:18px; font-size:20px; margin-top:12px;" onclick="completeSale()">إتمام البيع</button>
+      </div>
+
+      <div class="invoice">
+        <h3>آخر عمليات البيع</h3>
+        <div id="salesList"></div>
+        <div class="invoice-total" id="salesTotal">آخر المبيعات: 0 د.ع</div>
+      </div>
+    </section>
+
+    <section id="reportsSection" class="section">
+      <h2>تقارير المبيعات والأرباح</h2>
+      <div class="cards">
+        <div class="card"><h3>قيمة المخزون شراءً</h3><p id="stockValue">0 د.ع</p></div>
+        <div class="card"><h3>إجمالي المبيعات</h3><p id="allSalesTotal">0 د.ع</p></div>
+        <div class="card"><h3>إجمالي الأرباح</h3><p id="allProfitTotal">0 د.ع</p></div>
+      </div>
+      <div class="report-filter">
+        <div><label>اختر يوم التقرير</label><input type="date" id="reportDate" onchange="displayDailyReport()" /></div>
+        <button class="btn-success" onclick="setTodayReport()">تقرير اليوم</button>
+      </div>
+      <div class="cards">
+        <div class="card"><h3>مبيعات اليوم</h3><p id="selectedDayTotal">0 د.ع</p></div>
+        <div class="card"><h3>ربح اليوم</h3><p id="selectedDayProfit">0 د.ع</p></div>
+        <div class="card"><h3>عدد الفواتير</h3><p id="selectedDayCount">0</p></div>
+      </div>
+      <div class="desktop-table table-wrapper">
+        <table><thead><tr><th>#</th><th>الوقت</th><th>المنتج</th><th>المقاس</th><th>اللون</th><th>الكمية</th><th>سعر البيع</th><th>المجموع</th><th>الربح</th></tr></thead><tbody id="dailyReportTable"></tbody></table>
+      </div>
+      <div id="dailyReportCards"></div>
+      <button class="btn-danger" style="width:100%; margin-top:14px;" onclick="clearAll()">حذف كل بيانات البرنامج</button>
+    </section>
+  </div>
+
+  <nav class="bottom-nav">
+    <button id="navStock" class="active" onclick="showSection('stock')">المخزون</button>
+    <button id="navSales" onclick="showSection('sales')">البيع</button>
+    <button id="navReports" onclick="showSection('reports')">التقارير</button>
+  </nav>
+
+  <script>
+    let products = JSON.parse(localStorage.getItem("products")) || [];
+    let sales = JSON.parse(localStorage.getItem("sales")) || [];
+    let selectedProductIndex = null;
+    let qrScanner = null;
+
+    function saveData() {
+      localStorage.setItem("products", JSON.stringify(products));
+      localStorage.setItem("sales", JSON.stringify(sales));
+    }
+
+    function getDateKey(date = new Date()) {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, "0");
+      const d = String(date.getDate()).padStart(2, "0");
+      return `${y}-${m}-${d}`;
+    }
+
+    function getTimeText(date = new Date()) {
+      return date.toLocaleTimeString("ar-IQ", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+    }
+
+    function showSection(section) {
+      document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
+      document.querySelectorAll(".bottom-nav button").forEach(b => b.classList.remove("active"));
+      if (section === "stock") { document.getElementById("stockSection").classList.add("active"); document.getElementById("navStock").classList.add("active"); }
+      if (section === "sales") { document.getElementById("salesSection").classList.add("active"); document.getElementById("navSales").classList.add("active"); fillManualProducts(); }
+      if (section === "reports") { document.getElementById("reportsSection").classList.add("active"); document.getElementById("navReports").classList.add("active"); if (!document.getElementById("reportDate").value) setTodayReport(); displayDailyReport(); }
+      updateStats();
+    }
+
+    function showSaleMode(mode) {
+      document.getElementById("qrSaleBox").style.display = mode === "qr" ? "block" : "none";
+      document.getElementById("manualSaleBox").style.display = mode === "manual" ? "block" : "none";
+      selectedProductIndex = null;
+      document.getElementById("selectedProductBox").style.display = "none";
+      stopQRScanner();
+      if (mode === "manual") fillManualProducts();
+    }
+
+    function fillManualProducts() {
+      const select = document.getElementById("manualProduct");
+      if (!select) return;
+      select.innerHTML = `<option value="">اختر منتج</option>`;
+      products.forEach((p, index) => {
+        if (p.quantity > 0) {
+          const option = document.createElement("option");
+          option.value = index;
+          option.textContent = `${p.name} - ${p.size} - ${p.color} | ${p.sellPrice.toLocaleString()} د.ع | متوفر ${p.quantity}`;
+          select.appendChild(option);
+        }
+      });
+    }
+
+    function selectManualProduct() {
+      const index = Number(document.getElementById("manualProduct").value);
+      if (isNaN(index)) return;
+      showSelectedProduct(index);
+    }
+
+    function addProduct() {
+      const name = document.getElementById("name").value.trim();
+      const category = document.getElementById("category").value;
+      const size = document.getElementById("size").value;
+      const color = document.getElementById("color").value.trim();
+      const buyPrice = Number(document.getElementById("buyPrice").value);
+      const sellPrice = Number(document.getElementById("sellPrice").value);
+      const quantity = Number(document.getElementById("quantity").value);
+      if (!name || !color || buyPrice <= 0 || sellPrice <= 0 || quantity <= 0) return alert("يرجى إدخال جميع البيانات بشكل صحيح");
+      if (sellPrice < buyPrice) return alert("سعر البيع أقل من سعر الشراء");
+      products.push({ id: "P" + Date.now(), name, category, size, color, buyPrice, sellPrice, quantity });
+      saveData(); clearForm(); refreshAll();
+    }
+
+    function displayStock() {
+      const table = document.getElementById("stockTable");
+      const cards = document.getElementById("stockCards");
+      const search = document.getElementById("searchStock").value.toLowerCase();
+      table.innerHTML = ""; cards.innerHTML = "";
+      const filtered = products.filter(p => p.name.toLowerCase().includes(search) || p.category.toLowerCase().includes(search) || p.color.toLowerCase().includes(search) || p.size.toLowerCase().includes(search));
+      filtered.forEach((p, index) => {
+        const realIndex = products.indexOf(p);
+        const profitOne = (p.sellPrice || 0) - (p.buyPrice || 0);
+        const row = document.createElement("tr");
+        if (p.quantity <= 3) row.classList.add("low-stock");
+        row.innerHTML = `<td>${index + 1}</td><td>${p.name}</td><td>${p.category}</td><td>${p.size}</td><td>${p.color}</td><td>${(p.buyPrice || 0).toLocaleString()} د.ع</td><td>${(p.sellPrice || 0).toLocaleString()} د.ع</td><td>${profitOne.toLocaleString()} د.ع</td><td>${p.quantity}</td><td><button class="btn-warning" onclick="increaseQty(${realIndex})">+ كمية</button> <button class="btn-success" onclick="showProductQR(${realIndex})">QR</button> <button class="btn-danger" onclick="deleteProduct(${realIndex})">حذف</button></td>`;
+        table.appendChild(row);
+        const card = document.createElement("div");
+        card.className = "mobile-product-card";
+        if (p.quantity <= 3) card.style.background = "#fff7ed";
+        card.innerHTML = `<strong>${p.name}</strong><p>الصنف: ${p.category} | المقاس: ${p.size}</p><p>اللون: ${p.color}</p><p>شراء: ${(p.buyPrice || 0).toLocaleString()} د.ع</p><p>بيع: ${(p.sellPrice || 0).toLocaleString()} د.ع</p><p>ربح القطعة: ${profitOne.toLocaleString()} د.ع</p><p>الكمية: ${p.quantity}</p><div class="mobile-actions"><button class="btn-warning" onclick="increaseQty(${realIndex})">+ كمية</button><button class="btn-success" onclick="showProductQR(${realIndex})">QR</button><button class="btn-danger" onclick="deleteProduct(${realIndex})">حذف</button></div>`;
+        cards.appendChild(card);
+      });
+    }
+
+    function startQRScanner() {
+      const reader = document.getElementById("qr-reader");
+      reader.style.display = "block";
+      if (!window.Html5Qrcode) return alert("مكتبة قراءة QR لم تُحمّل. تأكد من اتصال الإنترنت أول مرة.");
+      if (qrScanner) return;
+      qrScanner = new Html5Qrcode("qr-reader");
+      qrScanner.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 240, height: 240 } }, function(decodedText) { selectProductByQR(decodedText); }, function() {})
+      .catch(function() { alert("لم يتم فتح الكاميرا. تأكد من السماح للمتصفح باستخدام الكاميرا."); });
+    }
+
+    function stopQRScanner() {
+      if (qrScanner) {
+        qrScanner.stop().then(function() {
+          qrScanner.clear(); qrScanner = null;
+          document.getElementById("qr-reader").style.display = "none";
+        });
+      }
+    }
+
+    function selectProductByQR(code) {
+      const index = products.findIndex(p => String(p.id) === String(code));
+      if (index === -1) return alert("هذا QR غير موجود في المخزون");
+      showSelectedProduct(index);
+      stopQRScanner();
+    }
+
+    function showSelectedProduct(index) {
+      selectedProductIndex = index;
+      const p = products[index];
+      document.getElementById("selectedProductBox").style.display = "block";
+      document.getElementById("selectedName").textContent = p.name;
+      document.getElementById("selectedSize").textContent = p.size;
+      document.getElementById("selectedColor").textContent = p.color;
+      document.getElementById("selectedPrice").textContent = (p.sellPrice || 0).toLocaleString() + " د.ع";
+      document.getElementById("selectedQty").textContent = p.quantity + " قطعة";
+    }
+
+    function completeSale() {
+      sellSelectedQRProduct();
+    }
+
+    function sellSelectedQRProduct() {
+      if (selectedProductIndex === null) return alert("امسح QR المنتج أولاً");
+      const index = selectedProductIndex;
+      const qty = Number(document.getElementById("saleQty").value);
+      if (qty <= 0) return alert("أدخل كمية صحيحة");
+      if (!products[index]) return alert("المنتج غير موجود");
+      if (qty > products[index].quantity) return alert("الكمية المطلوبة أكبر من المخزون");
+      const now = new Date();
+      const buyPrice = products[index].buyPrice || 0;
+      const sellPrice = products[index].sellPrice || 0;
+      products[index].quantity -= qty;
+      sales.push({ name: products[index].name, size: products[index].size, color: products[index].color, buyPrice, sellPrice, price: sellPrice, qty, total: sellPrice * qty, profit: (sellPrice - buyPrice) * qty, dateKey: getDateKey(now), time: getTimeText(now), fullDate: now.toLocaleString("ar-IQ") });
+      saveData(); selectedProductIndex = null;
+      document.getElementById("saleQty").value = 1;
+      fillManualProducts();
+      document.getElementById("selectedProductBox").style.display = "none";
+      refreshAll(); alert("تم البيع وحساب الربح");
+    }
+
+    function showProductQR(index) {
+      const p = products[index];
+      if (!p.id) { p.id = "P" + Date.now() + index; saveData(); }
+      const qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=" + encodeURIComponent(p.id);
+      const qrWindow = window.open("", "_blank", "width=320,height=450");
+      qrWindow.document.write(`<html dir="rtl" lang="ar"><head><title>QR المنتج</title><style>body{font-family:Arial;text-align:center;padding:20px;background:#f3f4f6}.box{background:white;border-radius:16px;padding:20px;box-shadow:0 4px 12px #0002}img{width:220px;height:220px}button{padding:12px 20px;border:0;border-radius:10px;background:#2563eb;color:white;font-weight:bold}</style></head><body><div class="box"><h2>${p.name}</h2><p>المقاس: ${p.size} | اللون: ${p.color}</p><p>السعر: ${(p.sellPrice || 0).toLocaleString()} د.ع</p><img src="${qrUrl}" alt="QR" /><p>كود المنتج: ${p.id}</p><button onclick="window.print()">طباعة QR</button></div></body></html>`);
+    }
+
+    function displaySales() {
+      const list = document.getElementById("salesList");
+      list.innerHTML = "";
+      const lastSales = sales.slice(-6).reverse();
+      let total = 0;
+      lastSales.forEach(s => {
+        total += s.total;
+        const row = document.createElement("div");
+        row.className = "invoice-row";
+        row.innerHTML = `<span>${s.name} - ${s.qty} قطعة<small>${s.dateKey || ""} | ${s.time || s.fullDate || ""}</small></span><span>${s.total.toLocaleString()} د.ع</span>`;
+        list.appendChild(row);
+      });
+      document.getElementById("salesTotal").textContent = "آخر المبيعات: " + total.toLocaleString() + " د.ع";
+    }
+
+    function setTodayReport() { document.getElementById("reportDate").value = getDateKey(); displayDailyReport(); }
+
+    function displayDailyReport() {
+      const selectedDate = document.getElementById("reportDate").value || getDateKey();
+      const table = document.getElementById("dailyReportTable");
+      const cards = document.getElementById("dailyReportCards");
+      table.innerHTML = ""; cards.innerHTML = "";
+      const daySales = sales.filter(s => s.dateKey === selectedDate);
+      const dayTotal = daySales.reduce((sum, s) => sum + s.total, 0);
+      const dayProfit = daySales.reduce((sum, s) => sum + (s.profit || 0), 0);
+      document.getElementById("selectedDayTotal").textContent = dayTotal.toLocaleString() + " د.ع";
+      document.getElementById("selectedDayProfit").textContent = dayProfit.toLocaleString() + " د.ع";
+      document.getElementById("selectedDayCount").textContent = daySales.length;
+      if (daySales.length === 0) {
+        table.innerHTML = `<tr><td colspan="9">لا توجد مبيعات في هذا اليوم</td></tr>`;
+        cards.innerHTML = `<div class="mobile-report-card"><strong>لا توجد مبيعات</strong><p>اليوم المختار: ${selectedDate}</p></div>`;
+        return;
+      }
+      daySales.forEach((s, i) => {
+        const row = document.createElement("tr");
+        row.innerHTML = `<td>${i + 1}</td><td>${s.time || ""}</td><td>${s.name}</td><td>${s.size}</td><td>${s.color}</td><td>${s.qty}</td><td>${(s.sellPrice || s.price || 0).toLocaleString()} د.ع</td><td>${s.total.toLocaleString()} د.ع</td><td>${(s.profit || 0).toLocaleString()} د.ع</td>`;
+        table.appendChild(row);
+        const card = document.createElement("div");
+        card.className = "mobile-report-card";
+        card.innerHTML = `<strong>${s.name}</strong><p>الوقت: ${s.time || ""}</p><p>المقاس: ${s.size} | اللون: ${s.color}</p><p>الكمية: ${s.qty}</p><p>المجموع: ${s.total.toLocaleString()} د.ع</p><p>الربح: ${(s.profit || 0).toLocaleString()} د.ع</p>`;
+        cards.appendChild(card);
+      });
+    }
+
+    function increaseQty(index) {
+      const amount = Number(prompt("كم قطعة تريد إضافتها؟", "1"));
+      if (amount > 0) { products[index].quantity += amount; saveData(); refreshAll(); }
+    }
+    function deleteProduct(index) { if (confirm("هل تريد حذف هذا المنتج من المخزون؟")) { products.splice(index, 1); saveData(); refreshAll(); } }
+    function clearAll() { if (confirm("هل تريد حذف كل بيانات المخزون والمبيعات؟")) { products = []; sales = []; saveData(); refreshAll(); } }
+    function clearForm() { document.getElementById("name").value = ""; document.getElementById("color").value = ""; document.getElementById("buyPrice").value = ""; document.getElementById("sellPrice").value = ""; document.getElementById("quantity").value = ""; }
+
+    function updateStats() {
+      const totalItems = products.length;
+      const totalQty = products.reduce((sum, p) => sum + p.quantity, 0);
+      const stockValue = products.reduce((sum, p) => sum + (p.buyPrice || 0) * p.quantity, 0);
+      const allSales = sales.reduce((sum, s) => sum + s.total, 0);
+      const allProfit = sales.reduce((sum, s) => sum + (s.profit || 0), 0);
+      const todayProfit = sales.filter(s => s.dateKey === getDateKey()).reduce((sum, s) => sum + (s.profit || 0), 0);
+      document.getElementById("totalItems").textContent = totalItems;
+      document.getElementById("totalQty").textContent = totalQty;
+      document.getElementById("todayProfit").textContent = todayProfit.toLocaleString() + " د.ع";
+      document.getElementById("stockValue").textContent = stockValue.toLocaleString() + " د.ع";
+      document.getElementById("allSalesTotal").textContent = allSales.toLocaleString() + " د.ع";
+      document.getElementById("allProfitTotal").textContent = allProfit.toLocaleString() + " د.ع";
+    }
+
+    function refreshAll() { displayStock(); displaySales(); displayDailyReport(); updateStats(); }
+    document.getElementById("reportDate").value = getDateKey();
+    refreshAll();
+  </script>
+  <footer class="footer">
+  <div>
+    <h3>StylePOS </h3>
+  
+
+  </div>
+
+  <div>
+   
+    <p>هذه النسخة من النظام هي نسخة تجريبية (Trial Version)، وقد تحتوي على خصائص محدودة مقارنة بالنسخة الكاملة. بعض الميزات مثل التقارير المتقدمة، النسخ الاحتياطي، إدارة المستخدمين، والتحليلات التفصيلية قد تتطلب تفعيل النسخة الكاملة.
+
+نحتفظ بحق تحديث أو تعديل أو إيقاف النسخة التجريبية في أي وقت بهدف تحسين الخدمة وتطوير النظام. </p>
+    <p>Developed by Abdulwahab | StylePOS v1.0 Trial </p>
+   
+     <p>© 2026 جميع الحقوق محفوظة </p>
+</div>
+</footer>
+</body>
+</html>
