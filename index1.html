@@ -76,9 +76,63 @@
     color:#d1d5db;
     font-size:14px;
 }
+.expired-screen{
+    position:fixed;
+    inset:0;
+    background:linear-gradient(135deg,#111827,#1f2937);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    z-index:99999;
+    padding:20px;
+}
+
+.expired-box{
+    background:white;
+    width:100%;
+    max-width:500px;
+    padding:35px;
+    border-radius:25px;
+    text-align:center;
+    box-shadow:0 20px 50px rgba(0,0,0,.3);
+}
+
+.icon{
+    font-size:70px;
+    margin-bottom:15px;
+}
+
+.expired-box h1{
+    margin:0;
+    color:#dc2626;
+    font-size:28px;
+}
+
+.expired-box p{
+    color:#4b5563;
+    line-height:1.9;
+}
+
+.info{
+    background:#f3f4f6;
+    padding:15px;
+    border-radius:15px;
+    margin:20px 0;
+}
+
+.expired-box button{
+    background:#2563eb;
+    color:white;
+    border:none;
+    padding:14px 30px;
+    border-radius:12px;
+    cursor:pointer;
+    font-size:16px;
+}
   </style>
 </head>
 <body>
+<div id="app">
   <header>
     <h1>StylePOS</h1>
    <p>من المخزون إلى البيع… كل شيء بمكان واحد</p>
@@ -185,6 +239,47 @@
     <button id="navReports" onclick="showSection('reports')">التقارير</button>
   </nav>
 
+<footer class="footer">
+  <div>
+    <h3>StylePOS </h3>
+  
+
+  </div>
+
+  <div>
+   
+    <p>هذه النسخة من النظام هي نسخة تجريبية (Trial Version)، وقد تحتوي على خصائص محدودة مقارنة بالنسخة الكاملة. بعض الميزات مثل التقارير المتقدمة، النسخ الاحتياطي، إدارة المستخدمين، والتحليلات التفصيلية قد تتطلب تفعيل النسخة الكاملة.
+
+نحتفظ بحق تحديث أو تعديل أو إيقاف النسخة التجريبية في أي وقت بهدف تحسين الخدمة وتطوير النظام. </p>
+    <p>Developed by Abdulwahab.k | StylePOS v1.0 Trial </p>
+   
+     <p>© 2026 جميع الحقوق محفوظة </p>
+</div>
+</footer>
+</div>
+
+<div id="expiredScreen" class="expired-screen" style="display:none;">
+  <div class="expired-box">
+    <div class="icon">🔒</div>
+    <h1>انتهت النسخة التجريبية</h1>
+    <p>يرجى إدخال كود التفعيل</p>
+
+    <input
+      id="licenseCode"
+      placeholder="أدخل كود التفعيل"
+      style="
+        width:100%;
+        padding:12px;
+        border:1px solid #ddd;
+        border-radius:10px;
+        margin:15px 0;
+        text-align:center;
+      "
+    >
+
+    <button onclick="activateSystem()">تفعيل</button>
+  </div>
+</div>
   <script>
     let products = JSON.parse(localStorage.getItem("products")) || [];
     let sales = JSON.parse(localStorage.getItem("sales")) || [];
@@ -418,23 +513,37 @@
     function refreshAll() { displayStock(); displaySales(); displayDailyReport(); updateStats(); }
     document.getElementById("reportDate").value = getDateKey();
     refreshAll();
-  </script>
-  <footer class="footer">
-  <div>
-    <h3>StylePOS </h3>
+   
+function activateSystem() {
+    const code = document.getElementById("licenseCode").value.trim();
+
+    if (code === "STYLEPOS2026") {
+        localStorage.setItem("activated", "true");
+
+        document.getElementById("expiredScreen").style.display = "none";
+        document.getElementById("app").style.display = "block";
+
+        alert("تم التفعيل بنجاح");
+    } else {
+        alert("كود التفعيل غير صحيح");
+    }
+}
+
+function checkActivation() {
+    const expiryDate = new Date("2026-05-01T23:59:59");
+    const activated = localStorage.getItem("activated");
+
+    if (new Date() > expiryDate && activated !== "true") {
+        document.getElementById("app").style.display = "none";
+        document.getElementById("expiredScreen").style.display = "flex";
+    } else {
+        document.getElementById("app").style.display = "block";
+        document.getElementById("expiredScreen").style.display = "none";
+    }
+}
+
+checkActivation();
+</script>
   
-
-  </div>
-
-  <div>
-   
-    <p>هذه النسخة من النظام هي نسخة تجريبية (Trial Version)، وقد تحتوي على خصائص محدودة مقارنة بالنسخة الكاملة. بعض الميزات مثل التقارير المتقدمة، النسخ الاحتياطي، إدارة المستخدمين، والتحليلات التفصيلية قد تتطلب تفعيل النسخة الكاملة.
-
-نحتفظ بحق تحديث أو تعديل أو إيقاف النسخة التجريبية في أي وقت بهدف تحسين الخدمة وتطوير النظام. </p>
-    <p>Developed by Abdulwahab | StylePOS v1.0 Trial </p>
-   
-     <p>© 2026 جميع الحقوق محفوظة </p>
-</div>
-</footer>
 </body>
 </html>
